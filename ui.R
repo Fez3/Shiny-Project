@@ -2,7 +2,7 @@
 
 shinyUI(fluidPage(
   
-  titlePanel("NYC Flights 2014"),
+  titlePanel(textOutput("slidertime") ),
   sidebarLayout(
     sidebarPanel(
       selectizeInput(inputId = "origin",
@@ -14,8 +14,8 @@ shinyUI(fluidPage(
       selectizeInput(inputId = "month",
                      label = "Date of Travel",
                      choices = unique(flights$month)),
-      sliderInput(inputId="Date", label="Date", min=as.Date(min(data$TIME)), max=as.Date(max(data$TIME)), value=as.Date(min(data$TIME)) , 
-                  timeFormat="%Y-%m-%d"     )
+      sliderInput(inputId="Date", label="Date", as.Date(min(data$TIME)), as.Date(max(data$TIME)),value=as.Date(min(data$TIME)),
+                  timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
       
       #,
       
@@ -24,6 +24,7 @@ shinyUI(fluidPage(
     ),
     #mainPanel(plotOutput("count"))
     mainPanel(
+      
       tabsetPanel(
         tabPanel("tab1",
       fluidRow(

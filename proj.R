@@ -9,6 +9,8 @@ library(htmltools)
 library(rgdal)
 setwd("C:/Users/fezro/OneDrive/Desktop/Git_Projects/Shiny Project")
 data=read.csv("./infectious_disease_predictability/Data/flu_clean.csv",stringsAsFactors=FALSE)
+
+data=read.csv("./infectious_disease_predictability/Data/HEPATITIS_A_Cases_1966-2014_20160707103116.csv",stringsAsFactors=FALSE)
 data[data=='-']<-0
 data[]<-lapply(data, function(x){as.numeric(x)})
 data<-select(data, -c("AMERICAN.SAMOA", "NORTHERN.MARIANA.ISLANDS", "GUAM","PAC.TRUST.TERR","NEW.YORK.CITY","UPSTATE.NEW.YORK", "VIRGIN.ISLANDS" ))
@@ -53,7 +55,25 @@ m %>% addPolygons(
     fillOpacity = 0.7,
     bringToFront = TRUE)) 
 
+leaflet(states) %>%
+  setView(-96, 37.8, 4) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))%>% debug( addPolygons(
+  fillColor = ~pal(as.numeric(unlist(x[1000,]))),
+  weight = 2,
+  opacity = 1,
+  color = "white",
+  dashArray = "3",
+  fillOpacity = 0.7,
+  highlight = highlightOptions(
+    weight = 5,
+    color = "#666",
+    dashArray = "",
+    fillOpacity = 0.7,
+    bringToFront = TRUE)) )
 
+)
 
 
 ######

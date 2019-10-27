@@ -6,14 +6,15 @@ shinyServer(
                 dest <- unique(flights[origin == input$origin, dest])
                 states <- geojsonio::geojson_read(x = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
                                                   , what = "sp")
-                bins <- c(0, 20, 100, 200, 500, 1000,10000,35000,100000, Inf)
+                bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
                 pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[1000,])), bins = bins)
               updateSelectizeInput(session, "dest", 
                                    choices=unique(flights[flights$origin==input$origin,'dest']),
                                    selected=unique(flights[flights$origin==input$origin,'dest']),
-              updateSliderInput(session, "Date", )
+             # updateSliderInput(session, "Date", datenow)
                                    
               )})
+              date_now<-reactive(ifelse( length(row.names(x[x$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(x$TIME[which.min(abs(input$Date-x$TIME))]) ))
               flights_delay <- reactive({
                 flights %>%
                   filter(origin == input$origin & dest == input$dest & month==input$month) %>%
@@ -36,24 +37,24 @@ shinyServer(
                   addProviderTiles("MapBox", options = providerTileOptions(
                     id = "mapbox.light",
                     accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
-                %>% addPolygons(
-                  fillColor = ~pal(as.numeric(unlist(x[1000,]))),
-                  weight = 2,
-                  opacity = 1,
-                  color = "white",
-                  dashArray = "3",
-                  fillOpacity = 0.7,
-                  highlight = highlightOptions(
-                    weight = 5,
-                    color = "#666",
-                    dashArray = "",
-                    fillOpacity = 0.7,
-                    bringToFront = TRUE)) 
+                %>% addPolygons(fillColor = ~pal(as.numeric(unlist(x[x$TIME==date_now(),!(colnames(x)=="TIME") ]))),
+                                weight = 2,
+                                opacity = 1,
+                                color = "white",
+                                dashArray = "3",
+                                fillOpacity = 0.7,
+                                highlight = highlightOptions(
+                                  weight = 5,
+                                  color = "#666",
+                                  dashArray = "",
+                                  fillOpacity = 0.7,
+                                  bringToFront = TRUE))
+                   
                 
               )
               
               output$dataf <- renderTable(
                 flights_delay() 
               )
-              
+              output$slidertime <- renderText(date_now() )
             })

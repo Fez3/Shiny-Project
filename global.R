@@ -21,5 +21,5 @@ data<-select(data, -"PUERTO.RICO") %>% mutate(., "PUERTO.RICO"=dummy[,])
 data$WEEK<-sprintf("%02d", data$WEEK )
 data<-data%>%mutate(., "TIME"=as.Date(paste(YEAR,WEEK,1,sep="" ), '%Y%U%u'))
 data$TIME=na.locf(data$TIME)
-x=select(data, -c("YEAR","WEEK","TIME"))
+x=select(data, -c("YEAR","WEEK"))
 
