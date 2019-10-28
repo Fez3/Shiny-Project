@@ -14,7 +14,7 @@ library(zoo)
 library(latticeExtra)
 library(shinydashboard)
 
-flights <- fread(file = "flights14.csv")
+
 diseases=c("chlamydia","gonorrhea", "hepatitis_a","influenza","measles","mumps","polio","whooping_cough")
 simpleCap <- function(x) {
   s <- strsplit(x, " ")[[1]]
@@ -108,19 +108,28 @@ data<-data%>%mutate(., "TIME"=as.Date(paste(YEAR,WEEK,1,sep="" ), '%Y%U%u'))
 data$TIME=na.locf(data$TIME)
 whooping_cough=data
 
-data=influenza
+
+
+
+
+
+lst_data = list(
+  
+  chlamydia = chlamydia,
+  gonorrhea = gonorrhea,
+  hepatitis_a=hepatitis_a,
+  influenza = influenza,
+  measles=measles,
+  mumps=mumps,
+  polio=polio,
+  whooping_cough=whooping_cough
+)
+
 stt=toupper( state.name)
 states <- geojsonio::geojson_read(x = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
                                   , what = "sp")
-colnames(data)<-c("YEAR", "WEEK", as.character(states$name), "TIME")
 
-x=select(data, -c("YEAR","WEEK"))
 
-m <- leaflet(states) %>%
-  setView(-96, 37.8, 4) %>%
-  addProviderTiles("MapBox", options = providerTileOptions(
-    id = "mapbox.light",
-    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
-m %>% addPolygons()
+
 
 

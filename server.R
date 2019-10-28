@@ -7,9 +7,12 @@ shinyServer(
                 
                 
               })
+              
+             
+              
               #updateSelectizeInput(session, "year",choices=x$YEAR, server=TRUE )
                observeEvent(input$disease, {
-                 data=eval(parse(text=selected_disease()))
+                 data=lst_data[[selected_disease() ]]
                  x=select(data, -c("YEAR","WEEK"))
                  min=as.Date(min(data$TIME))
                  max=as.Date(max(data$TIME))
@@ -20,13 +23,22 @@ shinyServer(
                  
                  
              })
-              date_now<-reactive(ifelse( length(row.names(x[x$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(x$TIME[which.min(abs(input$Date-x$TIME))]) ))
+              date_now<-reactive(ifelse( length(row.names(lst_data[[selected_disease() ]][lst_data[[selected_disease() ]]$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(lst_data[[selected_disease() ]]$TIME[which.min(abs(input$Date-lst_data[[selected_disease() ]]$TIME))]) ))
               #updata<-reactive(data=eval(parse(text=selected_disease())))             
-              selected_disease<-reactive({s=input$disease
-                return(paste(tolower(s),
+             
+              
+               selected_disease<-reactive({s=input$disease
+                return(
+                  
+                  paste(tolower(s),
                       sep="", collapse="_"))  
                                          })
-              plotdata<-reactive({
+            
+               
+               
+               
+                 plotdata<-reactive({
+                word=selected_disease()
                 data=eval(parse(text=selected_disease()))
                 plotdata<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
                 plotdata$month = factor(plotdata$month, levels = month.name)
@@ -35,15 +47,20 @@ shinyServer(
               
               })
              
-               divisor<-reactive(sum(colSums(select(data, -c("YEAR","WEEK","TIME"))) ))  
+               divisor<-reactive(sum(colSums(select(data, -c("YEAR","WEEK","TIME"))) )) 
+               
+               
+               
+               
               output$count <- renderLeaflet({
-                #req(input$disease)
+                req(input$disease)
                 dis=selected_disease()
-                data=eval(parse(text=selected_disease()))
+                data = lst_data[[dis]]
                 
                 x=select(data, -c("YEAR","WEEK"))
                 bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
-                pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[x$TIME==date_now(),])), bins = bins)
+                pal = colorBin("YlOrRd", domain = as.numeric(unlist(x[x$TIME==date_now(),])), bins = bins)
+               
                 m=leaflet(states) %>%
                   setView(-96, 37.8, 4) %>% #addProviderTiles("Esri.WorldStreetMap") %>%
                   addProviderTiles("MapBox", options = providerTileOptions(
@@ -66,16 +83,18 @@ shinyServer(
                 
               })
               
-              output$peak<-renderPlot(
+              output$peak<-renderPlot({
+               
                 plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total/divisor())) +geom_bar(stat="identity") +scale_y_continuous(labels=scales::percent) +
                   ylab("relative frequencies") 
-              )
-            
-              output$heat<-renderPlot(
+              })
+              
+              output$heat<-renderPlot({
+               
                 plotdata() %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases)) %>% levelplot(total ~ YEAR * month, ., 
                                                                                                                panel = panel.levelplot.points, cex = 1.2, main = list(input$disease,side=1,line=0.5)
                 ) + 
                   layer_(panel.2dsmoother(..., n = 200))
-              )
+              })
               output$slidertime <- renderText(date_now() )
             })

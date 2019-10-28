@@ -18,11 +18,11 @@ shinyUI(dashboardPage(skin = "green",
    
     tabItems(
       tabItem(tabName = "map",
-              leafletOutput("count"),
+              leafletOutput("count"),box(
               selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases), 
               sliderInput(inputId="Date", label="Date", as.Date(min(data$TIME)), as.Date(max(data$TIME)),value=as.Date(min(data$TIME)),
                                                   timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
-              ),
+            )  ),
       tabItem(tabName = "data",
               plotOutput("peak"),selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases),plotOutput("heat")
               ),
