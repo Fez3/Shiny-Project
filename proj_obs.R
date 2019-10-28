@@ -192,4 +192,18 @@ leaf %>%
 #        fillColor: "hsl("+hue+", 100%%, 50%%)"
 #        });
 #}
-    
+
+data=polio
+data<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
+data$month = factor(data$month, levels = month.name)
+data %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total)) +geom_bar(stat="identity")
+require(lattice)
+library(latticeExtra) 
+data=influenza
+data<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
+data$month = factor(data$month, levels = month.name)
+
+data %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases)) %>% levelplot(total ~ YEAR * month, ., 
+          panel = panel.levelplot.points, cex = 1.2
+) + 
+  layer_(panel.2dsmoother(..., n = 200))

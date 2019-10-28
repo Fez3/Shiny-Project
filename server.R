@@ -3,43 +3,50 @@ shinyServer(
             
             function(input, output, session) {
               observe({
-                dest <- unique(flights[origin == input$origin, dest])
-                states <- geojsonio::geojson_read(x = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
-                                                  , what = "sp")
-                bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
-                pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[1000,])), bins = bins)
-              updateSelectizeInput(session, "dest", 
-                                   choices=unique(flights[flights$origin==input$origin,'dest']),
-                                   selected=unique(flights[flights$origin==input$origin,'dest']),
-             # updateSliderInput(session, "Date", datenow)
-                                   
-              )})
-              date_now<-reactive(ifelse( length(row.names(x[x$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(x$TIME[which.min(abs(input$Date-x$TIME))]) ))
-              flights_delay <- reactive({
-                flights %>%
-                  filter(origin == input$origin & dest == input$dest & month==input$month) %>%
-                  group_by(carrier) %>%
-                  summarise(n=n(), arrival=mean(arr_delay), departure=mean(dep_delay))
+               
                 
                 
               })
-              output$delay <- renderPlot(
-                flights_delay() %>% 
-                  gather(key = type, value = delay, departure, arrival) %>%
-                  ggplot(aes(x = carrier, y = delay, fill = type)) +
-                  geom_col(position = "dodge") + ggtitle("Average delay")
-              )
-              output$count <- renderLeaflet(
+              #updateSelectizeInput(session, "year",choices=x$YEAR, server=TRUE )
+               observeEvent(input$disease, {
+                 data=eval(parse(text=selected_disease()))
+                 x=select(data, -c("YEAR","WEEK"))
+                 min=as.Date(min(data$TIME))
+                 max=as.Date(max(data$TIME))
+                 value=as.Date(min(data$TIME))
                 
-                
-                leaflet(states) %>%
-                  setView(-96, 37.8, 4) %>%
+                 #pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[50,])), bins = 7)
+                 updateSliderInput(session, "Date", min=min,max=max,value=value)
+                 
+                 
+             })
+              date_now<-reactive(ifelse( length(row.names(x[x$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(x$TIME[which.min(abs(input$Date-x$TIME))]) ))
+              #updata<-reactive(data=eval(parse(text=selected_disease())))             
+              selected_disease<-reactive({s=input$disease
+                paste(tolower(s),
+                      sep="", collapse="_")  
+                                         })
+              plotdata<-reactive({
+                data=eval(parse(text=selected_disease()))
+                plotdata<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
+                plotdata$month = factor(plotdata$month, levels = month.name)
+                return(plotdata)
+              })
+            
+              output$count <- renderLeaflet({
+                dis=selected_disease()
+                data=eval(parse(text=selected_disease()))
+                x=select(data, -c("YEAR","WEEK"))
+                bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
+                pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[x$TIME==date_now(),])), bins = bins)
+                m=leaflet(states) %>%
+                  #setView(-96, 37.8, 4) %>%
                   addProviderTiles("MapBox", options = providerTileOptions(
                     id = "mapbox.light",
-                    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
-                %>% addPolygons(fillColor = ~pal(as.numeric(unlist(x[x$TIME==date_now(),!(colnames(x)=="TIME") ]))),
+                    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))%>% addPolygons(fillColor = ~pal(as.numeric(unlist(x[x$TIME==date_now(),!(colnames(x)=="TIME") ]))),
                                 weight = 2,
                                 opacity = 1,
+                                layerId = 7,
                                 color = "white",
                                 dashArray = "3",
                                 fillOpacity = 0.7,
@@ -49,12 +56,21 @@ shinyServer(
                                   dashArray = "",
                                   fillOpacity = 0.7,
                                   bringToFront = TRUE))
+                return(m)
                    
                 
-              )
+              })
               
-              output$dataf <- renderTable(
-                flights_delay() 
+              output$peak<-renderPlot(
+                plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total)) +geom_bar(stat="identity")
+                
+              )
+            
+              output$heat<-renderPlot(
+                plotdata() %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases)) %>% levelplot(total ~ YEAR * month, ., 
+                                                                                                               panel = panel.levelplot.points, cex = 1.2, main = list(input$disease,side=1,line=0.5)
+                ) + 
+                  layer_(panel.2dsmoother(..., n = 200))
               )
               output$slidertime <- renderText(date_now() )
             })
