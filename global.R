@@ -12,6 +12,8 @@ library(htmltools)
 library(rgdal)
 library(zoo)
 library(latticeExtra)
+library(shinydashboard)
+
 flights <- fread(file = "flights14.csv")
 diseases=c("chlamydia","gonorrhea", "hepatitis_a","influenza","measles","mumps","polio","whooping_cough")
 simpleCap <- function(x) {

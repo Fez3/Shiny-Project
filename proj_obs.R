@@ -196,7 +196,10 @@ leaf %>%
 data=polio
 data<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
 data$month = factor(data$month, levels = month.name)
-data %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total)) +geom_bar(stat="identity")
+cnstnt=sum(data$total_reported_cases)
+data %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month, y=total/cnstnt)) +geom_bar(stat="identity")+scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies") 
+
 require(lattice)
 library(latticeExtra) 
 data=influenza
@@ -207,3 +210,36 @@ data %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases))
           panel = panel.levelplot.points, cex = 1.2
 ) + 
   layer_(panel.2dsmoother(..., n = 200))
+
+
+
+
+sidebarUserPanel("Aaron Festinger", image = img(src="360_borat_lebanon0109.jpg", align = "right"),
+                 sidebarMenu(
+                   menuItem("Map", tabName = "map", icon = icon("map")),
+                   menuItem("Data", tabName = "data", icon = icon("database"))))
+
+tabItems(
+  tabItem(tabName = "map",
+          fluidRow(box(leafletOutput("count"), 
+                       height = 300),
+                   box(plotOutput("peak"), 
+                       height = 300))),
+  tabItem(tabName = "data",
+          fluidRow(box(plotOutput("heat")))))
+
+library(plyr)
+state="TEXAS"
+stateplot=data.frame(whooping_cough[,"TIME"])
+colnames(stateplot)
+for(disease in diseases){
+  a=data.frame(eval(parse(text=disease))[,eval(state)])
+  colnames(a)<-eval(disease)
+
+  stateplot<- rbind.fill(stateplot,a )
+}
+stateplot[is.na(stateplot)]<-0
+
+
+
+

@@ -30,9 +30,11 @@ shinyServer(
                 data=eval(parse(text=selected_disease()))
                 plotdata<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
                 plotdata$month = factor(plotdata$month, levels = month.name)
+                
                 return(plotdata)
+              
               })
-            
+              divisor<-reactive(sum(colSums(select(data, -c("YEAR","WEEK","TIME"))) ))  
               output$count <- renderLeaflet({
                 dis=selected_disease()
                 data=eval(parse(text=selected_disease()))
@@ -62,8 +64,8 @@ shinyServer(
               })
               
               output$peak<-renderPlot(
-                plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total)) +geom_bar(stat="identity")
-                
+                plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total/divisor())) +geom_bar(stat="identity") +scale_y_continuous(labels=scales::percent) +
+                  ylab("relative frequencies") 
               )
             
               output$heat<-renderPlot(
