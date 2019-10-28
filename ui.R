@@ -1,52 +1,36 @@
 
-
-shinyUI(dashboardPage(
+ 
+shinyUI(dashboardPage(skin = "green",
   dashboardHeader(title = "Contagion Spread"),
-  dashboardSidebar(
-   
-    
-    
-  ),
-  dashboardBody(
-   
   
+  dashboardSidebar(Title="Aaron Festinger", br(), 
+                   img(src="A.jpg", width=100,height = 100, align="center"),
     
-    titlePanel(textOutput("slidertime") ),
-    sidebarLayout(
+        sidebarMenu(
+              
+          menuItem("Map", tabName = "map", icon = icon("map")),
+          menuItem("Data", tabName = "data", icon = icon("database")),
+          menuItem("Geographic Spread", tabName = "hmap", icon = icon("database"))                          
+                                    )
+                                    ),
+ 
+   dashboardBody(
+   
+    tabItems(
+      tabItem(tabName = "map",
+              leafletOutput("count"),
+              selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases), 
+              sliderInput(inputId="Date", label="Date", as.Date(min(data$TIME)), as.Date(max(data$TIME)),value=as.Date(min(data$TIME)),
+                                                  timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
+              ),
+      tabItem(tabName = "data",
+              plotOutput("peak"),selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases),plotOutput("heat")
+              ),
       
-      sidebarPanel(
-        selectizeInput(inputId = "disease",
-                       label = "Contagion",
-                       choices = Diseases),
-        
-        #  selectizeInput(inputId = "year",
-        #                label = "Year",
-        #               choices = NULL),
-        sliderInput(inputId="Date", label="Date", as.Date(min(data$TIME)), as.Date(max(data$TIME)),value=as.Date(min(data$TIME)),
-                    timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
-        
-        #,
-        
-        #animationOptions(interval = 7, loop = FALSE, playButton = NULL,
-        #                pauseButton = NULL)
-      ),
-      #mainPanel(plotOutput("count"))
-      
-      
-      mainPanel(
-        
-        
-        fluidRow(
-          column(5, leafletOutput("count")),
-          column(5, 
-                 fluidRow(plotOutput("peak")),
-                 fluidRow(plotOutput("heat") )
-          )
-        )
-        
-      )
-    )
-  )
+      tabItem(tabName = "hmap", box(tags$iframe(src="https://www.youtube.com/embed/dQw4w9WgXcQ",width="600",height="400"))
 )
-
+ 
+)
+)
+)
 )

@@ -23,8 +23,8 @@ shinyServer(
               date_now<-reactive(ifelse( length(row.names(x[x$TIME==as.character(input$Date), ]))==1,as.character(input$Date),as.character(x$TIME[which.min(abs(input$Date-x$TIME))]) ))
               #updata<-reactive(data=eval(parse(text=selected_disease())))             
               selected_disease<-reactive({s=input$disease
-                paste(tolower(s),
-                      sep="", collapse="_")  
+                return(paste(tolower(s),
+                      sep="", collapse="_"))  
                                          })
               plotdata<-reactive({
                 data=eval(parse(text=selected_disease()))
@@ -34,15 +34,18 @@ shinyServer(
                 return(plotdata)
               
               })
-              divisor<-reactive(sum(colSums(select(data, -c("YEAR","WEEK","TIME"))) ))  
+             
+               divisor<-reactive(sum(colSums(select(data, -c("YEAR","WEEK","TIME"))) ))  
               output$count <- renderLeaflet({
+                #req(input$disease)
                 dis=selected_disease()
                 data=eval(parse(text=selected_disease()))
+                
                 x=select(data, -c("YEAR","WEEK"))
                 bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
                 pal <- colorBin("YlOrRd", domain = as.numeric(unlist(x[x$TIME==date_now(),])), bins = bins)
                 m=leaflet(states) %>%
-                  #setView(-96, 37.8, 4) %>%
+                  setView(-96, 37.8, 4) %>% #addProviderTiles("Esri.WorldStreetMap") %>%
                   addProviderTiles("MapBox", options = providerTileOptions(
                     id = "mapbox.light",
                     accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))%>% addPolygons(fillColor = ~pal(as.numeric(unlist(x[x$TIME==date_now(),!(colnames(x)=="TIME") ]))),

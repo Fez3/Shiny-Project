@@ -1,3 +1,4 @@
+library(plyr)
 library(dplyr)
 library(ggplot2)
 library(gganimate)
@@ -222,24 +223,34 @@ sidebarUserPanel("Aaron Festinger", image = img(src="360_borat_lebanon0109.jpg",
 tabItems(
   tabItem(tabName = "map",
           fluidRow(box(leafletOutput("count"), 
-                       height = 300),
-                   box(plotOutput("peak"), 
-                       height = 300))),
-  tabItem(tabName = "data",
-          fluidRow(box(plotOutput("heat")))))
+                       height = 300)
+#                   ,box(plotOutput("peak"), 
+#                       height = 300))),
+#  tabItem(tabName = "data",
+#          fluidRow(box(plotOutput("heat")))))
 
 library(plyr)
 state="TEXAS"
 stateplot=data.frame(whooping_cough[,"TIME"])
+colnames(stateplot)[1]<-"TIME"
 colnames(stateplot)
 for(disease in diseases){
-  a=data.frame(eval(parse(text=disease))[,eval(state)])
-  colnames(a)<-eval(disease)
+  a=toupper(disease)
+  assign(eval(a),data.frame(eval(parse(text=disease))[,c("TIME",state)]))
+  colnames(eval(disease))<-eval(disease)
+  if(length(a)<5519) a[length(a)+1:5518]<-0
+  stateplot[[disease]]<-a
 
-  stateplot<- rbind.fill(stateplot,a )
+  
 }
-stateplot[is.na(stateplot)]<-0
+for(disease in diseases){
+       assign(toupper(disease),data.frame(eval(parse(text=disease))[,c("TIME",eval(state))]))}
 
 
+plot(MUMPS, MEASLES, pch = 22, 
+     col = rep(c('forestgreen','blue'),each = 2),main="Capital Allocation Lines", 
+     xlab="Standard Deviation", ylab="Expected Return")
 
-
+plot(c(MUMPS$TIME,MEASLES$TIME, INFLUENZA$TIME, CHLAMYDIA$TIME, HEPATITIS_A$TIME, POLIO$TIME, GONORRHEA$TIME, WHOOPING_COUGH$TIME ), c(MUMPS$TEXAS, MEASLES$TEXAS, INFLUENZA$TEXAS, CHLAMYDIA$TEXAS,HEPATITIS_A$TEXAS, POLIO$TEXAS, GONORRHEA$TEXAS, WHOOPING_COUGH$TEXAS), pch = 22, 
+     col = rep(c('forestgreen','blue','yellow','orange','red','purple','black','grey'),each = 2),main="Capital Allocation Lines", 
+     xlab="Standard Deviation", ylab="Expected Return")
