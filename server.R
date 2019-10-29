@@ -2,19 +2,6 @@
 shinyServer(
             
             function(input, output, session) {
-              observe({
-                click<-input$map_marker_click
-                if(is.null(click))
-                  return()
-                text<-paste("Lattitude ", click$lat, "Longtitude ", click$lng)
-                text2<-paste("You've selected point ", click$id)
-                map$clearPopups()
-                map$showPopup( click$lat, click$lng, text)
-                output$Click_text<-renderText({
-                  text2
-                })
-                
-              })
               
              
               
@@ -65,8 +52,8 @@ shinyServer(
                
                
                
-               
-              output$count <- renderLeaflet({
+              # v <- reactiveValues(clicker=FALSE)
+              output$map <- renderLeaflet({
                 req(input$disease)
                 dis=selected_disease()
                 data = lst_data[[dis]]
@@ -92,10 +79,62 @@ shinyServer(
                                   dashArray = "",
                                   fillOpacity = 0.7,
                                   bringToFront = TRUE))
+                #if(v$clicker)map%>%addPopups(lon, lat, content,options = popupOptions(closeButton = FALSE))
                 return(map)
                    
                 
               })
+              
+              observeEvent(input$map_shape_click, {
+                click <- input$map_shape_click
+                
+                if(is.null(click))
+                  return()   
+                
+                #pulls lat and lon from shiny click event
+                lat <- click$lat
+                lon <- click$lng
+                
+                #puts lat and lon for click point into its own data frame
+                coords <- as.data.frame(cbind(lon, lat))
+                
+                #converts click point coordinate data frame into SP object, sets CRS
+                point <- SpatialPoints(coords)
+                proj4string(point) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+                
+                #retrieves country in which the click point resides, set CRS for country
+                selected <- states[point,]
+                proj4string(selected) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+                stayt=toupper(as.character(over(point, states)$name))
+                dis=selected_disease()
+                data = lst_data[[dis]]
+                proxy <- leafletProxy("map")
+                if(click$id == "Selected"){
+                  proxy %>% removeShape(layerId = "Selected")
+                  #v$clicker=FALSE
+                } else {
+                 # v$clicker=TRUE
+                  content <- paste(sep = "<br/>", 
+                                   as.character(data[data$TIME==date_now(),stayt ]),
+                                   "infected"
+                                   
+                  )
+                  
+                  proxy %>% addTiles() %>%
+                    addPopups(lon, lat, content,
+                              options = popupOptions(closeButton = FALSE)
+                    )
+                } 
+              })
+            
+              
+              
+              
+              
+              
+              
+              
+              
               
               output$peak<-renderGvis ({
                
@@ -113,10 +152,12 @@ shinyServer(
                   layer_(panel.2dsmoother(..., n = 200))
               })
               output$slidertime <- renderText(date_now() )
+              
              output$byState<- renderGvis({
+               dis=selected_disease()
                thisregion=choice_state()
            
-               regional=lst_data[[ selected_disease() ]]
+               regional=lst_data[[ dis ]]
                regional=regional[,c("TIME",thisregion)]
                my_options <- list(width="600px", height="400px",
                                   title=paste("Historical Trend for",input$disease),

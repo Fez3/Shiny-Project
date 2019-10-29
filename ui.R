@@ -19,7 +19,7 @@ shinyUI(dashboardPage(skin = "green",
    
     tabItems(
       tabItem(tabName = "map",
-              leafletOutput("count"),box(
+              leafletOutput("map"),box(
               selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases), 
               sliderInput(inputId="Date", label="Date", as.Date(min(data$TIME)), as.Date(max(data$TIME)),value=as.Date(min(data$TIME)),
                                                   timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
@@ -32,7 +32,7 @@ shinyUI(dashboardPage(skin = "green",
      ) ),
       
       
-      tabItem(tabName = "hmap", box(tags$iframe(src="https://www.youtube.com/embed/dQw4w9WgXcQ",width="600",height="400"))
+      tabItem(tabName = "hmap", box(tags$iframe(src="https://www.youtube.com/embed/dQw4w9WgXcQ",width="600",height="400") )
 )
  
 )
