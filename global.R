@@ -125,15 +125,16 @@ lst_data = list(
   polio=polio,
   whooping_cough=whooping_cough
 )
-
-stt=toupper( state.name)
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+        sep="", collapse=" ")
+}
+stt=sapply( state.name,simpleCap)
 states <- geojsonio::geojson_read(x = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
                                   , what = "sp")
 
-my_options <- list(width="600px", height="400px",
-                   title="Motor Trend Car Road Tests",
-                   hAxis="{title:'Weight (1000 lbs)'}",
-                   vAxis="{title:'Miles/(US) gallon'}")
+
 
 
 

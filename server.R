@@ -41,7 +41,13 @@ shinyServer(
                   paste(tolower(s),
                       sep="", collapse="_"))  
                                          })
+            choice_state<-reactive({l=input$stin
+            if(length(l)>1)return(paste(toupper(l),
+                                        sep="", collapse="."))
+            return(toupper(l))
             
+            
+            })
                
                
                
@@ -107,5 +113,15 @@ shinyServer(
                   layer_(panel.2dsmoother(..., n = 200))
               })
               output$slidertime <- renderText(date_now() )
-             #output$byState<- renderGvis(plot(gvisScatterChart(chlamydia,options=my_options)))
+             output$byState<- renderGvis({
+               thisregion=choice_state()
+           
+               regional=lst_data[[ selected_disease() ]]
+               regional=regional[,c("TIME",thisregion)]
+               my_options <- list(width="600px", height="400px",
+                                  title=paste("Historical Trend for",input$disease),
+                                  hAxis="{title:'Date'}",
+                                  vAxis="{title:'Weekly Reported Cases'}")
+               gvisLineChart(data.frame(regional),options=my_options)
+                      })
             })
