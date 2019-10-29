@@ -3,8 +3,16 @@ shinyServer(
             
             function(input, output, session) {
               observe({
-               
-                
+                click<-input$map_marker_click
+                if(is.null(click))
+                  return()
+                text<-paste("Lattitude ", click$lat, "Longtitude ", click$lng)
+                text2<-paste("You've selected point ", click$id)
+                map$clearPopups()
+                map$showPopup( click$lat, click$lng, text)
+                output$Click_text<-renderText({
+                  text2
+                })
                 
               })
               
@@ -39,7 +47,7 @@ shinyServer(
                
                  plotdata<-reactive({
                 word=selected_disease()
-                data=eval(parse(text=selected_disease()))
+                data=lst_data[[word ]]
                 plotdata<-data%>%mutate(., "month"=format(TIME,"%B"),"total_reported_cases"=rowSums(select(data, -c("YEAR","WEEK","TIME")))) 
                 plotdata$month = factor(plotdata$month, levels = month.name)
                 
@@ -61,7 +69,7 @@ shinyServer(
                 bins <- c(0, 20, 50, 100, 300, 1000, 2000, 3000, Inf)
                 pal = colorBin("YlOrRd", domain = as.numeric(unlist(x[x$TIME==date_now(),])), bins = bins)
                
-                m=leaflet(states) %>%
+                map=leaflet(states) %>%
                   setView(-96, 37.8, 4) %>% #addProviderTiles("Esri.WorldStreetMap") %>%
                   addProviderTiles("MapBox", options = providerTileOptions(
                     id = "mapbox.light",
@@ -78,23 +86,26 @@ shinyServer(
                                   dashArray = "",
                                   fillOpacity = 0.7,
                                   bringToFront = TRUE))
-                return(m)
+                return(map)
                    
                 
               })
               
-              output$peak<-renderPlot({
+              output$peak<-renderGvis ({
                
-                plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)) %>% ggplot(., aes(x=month,y=total/divisor())) +geom_bar(stat="identity") +scale_y_continuous(labels=scales::percent) +
-                  ylab("relative frequencies") 
+                plt<-plotdata() %>% group_by(., month)%>%summarise(.,total=sum(total_reported_cases)/divisor()) 
+                gvisColumnChart(plt, "month", "total",options=list(width=600, height=400,legend="none",title="Total Reported Cases by Season"))
+                 # ggplot(plt, aes(x=month,y=total)) +geom_bar(stat="identity") +scale_y_continuous(labels=scales::percent) +
+                #ylab("relative frequencies") 
               })
               
-              output$heat<-renderPlot({
+              output$heat<-renderPlot ({
                
-                plotdata() %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases)) %>% levelplot(total ~ YEAR * month, ., 
+                plotdata() %>% group_by(., YEAR, month)%>%summarise(.,total=sum(total_reported_cases)) %>% levelplot(total ~ YEAR * month, ., col.regions=cm.colors(12),
                                                                                                                panel = panel.levelplot.points, cex = 1.2, main = list(input$disease,side=1,line=0.5)
                 ) + 
                   layer_(panel.2dsmoother(..., n = 200))
               })
               output$slidertime <- renderText(date_now() )
+             #output$byState<- renderGvis(plot(gvisScatterChart(chlamydia,options=my_options)))
             })

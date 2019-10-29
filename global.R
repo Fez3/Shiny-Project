@@ -13,7 +13,8 @@ library(rgdal)
 library(zoo)
 library(latticeExtra)
 library(shinydashboard)
-
+library(googleVis)
+library(RColorBrewer)
 
 diseases=c("chlamydia","gonorrhea", "hepatitis_a","influenza","measles","mumps","polio","whooping_cough")
 simpleCap <- function(x) {
@@ -129,7 +130,10 @@ stt=toupper( state.name)
 states <- geojsonio::geojson_read(x = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
                                   , what = "sp")
 
-
+my_options <- list(width="600px", height="400px",
+                   title="Motor Trend Car Road Tests",
+                   hAxis="{title:'Weight (1000 lbs)'}",
+                   vAxis="{title:'Miles/(US) gallon'}")
 
 
 

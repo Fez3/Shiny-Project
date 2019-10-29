@@ -24,7 +24,7 @@ shinyUI(dashboardPage(skin = "green",
                                                   timeFormat="%Y-%m-%d" ,animate = animationOptions(interval = 100   ))
             )  ),
       tabItem(tabName = "data",
-              plotOutput("peak"),selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases),plotOutput("heat")
+              htmlOutput("peak"),selectizeInput(inputId = "disease",label = "Contagion",choices = Diseases),plotOutput ("heat")
               ),
       
       tabItem(tabName = "hmap", box(tags$iframe(src="https://www.youtube.com/embed/dQw4w9WgXcQ",width="600",height="400"))
